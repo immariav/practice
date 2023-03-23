@@ -5,19 +5,23 @@
 class WiFiFrame
 {
 public:
+
+	struct MCS
+	{
+		short int value;
+		std::string standart;
+		std::string scheme;
+		short int speed_mbps;
+	};
+
 	int id;
 	double offset;
 	short int bandWidth;
-	std::string mcs;
-	//struct mcs
-	//{
-	//	short int value;
-	//	std::string standart;
-	//	short int QAM;
-	//	std::string FEC;
-	//	short int speed;
-	//};
+	MCS mcs;
 	short int size;
 	std::string bits;
+
+private:
+
 };
 
