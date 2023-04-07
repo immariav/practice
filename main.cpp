@@ -1,8 +1,8 @@
 ﻿#include <iostream>
-#include "WiFiFrame.h"
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include "WiFiFrame.h"
 
 std::vector<WiFiFrame> parsing(std::string fileName);
 
@@ -10,7 +10,16 @@ int main()
 {
     std::vector<WiFiFrame> frames = parsing("frames_phy.log");
 
+    std::vector<WiFiFrame> frames_sorted;
 
+    for (int i = 0; i < frames.size(); i++)
+    {
+        if (WiFiFrame::checkCRC32(frames[i].bits, frames[i].size))
+            frames_sorted.push_back(frames[i]);
+    }
+
+    if(frames_sorted.size())
+        std::cout << std::dec << "passed " << frames_sorted.size();
 }
 
 std::vector<WiFiFrame> parsing(std::string fileName)
@@ -68,7 +77,7 @@ std::vector<WiFiFrame> parsing(std::string fileName)
 
         std::string size_str;
         getline(ss, size_str, ',');
-        frame.size = stoi(size_str.substr(5)); // skip "Size=" prefix
+        frame.size = (size_t)stoi(size_str.substr(5)); // skip "Size=" prefix
 
         std::string bits_str;
         getline(ss, bits_str, '\n');
