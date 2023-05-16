@@ -18,8 +18,26 @@ int main()
             frames_sorted.push_back(frames[i]);
     }
 
+    frames.clear(); 
+    frames.shrink_to_fit(); 
+
     if(frames_sorted.size())
         std::cout << std::dec << "passed " << frames_sorted.size();
+
+    std::cout << std::endl;
+    int count = 0;
+    for (int i = 0; i < frames_sorted.size(); i++)
+    {
+        if (frames_sorted[i].WiFiFrame::getType() == 0)
+        {
+            if (frames_sorted[i].WiFiFrame::isBeacon())
+            {
+                count++;
+            }
+        }
+    }
+
+    std::cout << count;
 }
 
 std::vector<WiFiFrame> parsing(std::string fileName)
@@ -57,7 +75,7 @@ std::vector<WiFiFrame> parsing(std::string fileName)
         getline(mcs_ss, mcs_standart_str, ' ');
         frame.mcs.standart = mcs_standart_str.substr(0);
 
-        short int pos = mcs_str.find("mbps)"); // check if there's data about speed
+        size_t pos = mcs_str.find("mbps)"); // check if there's data about speed
         if (pos == -1)
         {
             frame.mcs.speed_mbps = 0;

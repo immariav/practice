@@ -18,7 +18,7 @@ WiFiFrame::WiFiFrame()
 	bits = "";
 }
 
-WiFiFrame::WiFiFrame(int Id, double Offset, short int BandWidth, MCS Mcs, size_t Size, std::string Bits)
+WiFiFrame::WiFiFrame(uint32_t Id, double Offset, short int BandWidth, MCS Mcs, size_t Size, std::string Bits)
 {
 	id = Id;
 	offset = Offset;
@@ -33,6 +33,17 @@ WiFiFrame::WiFiFrame(int Id, double Offset, short int BandWidth, MCS Mcs, size_t
 
 WiFiFrame::~WiFiFrame()
 {
+}
+
+uint8_t* WiFiFrame::dataToByteArray(const std::string hexStr, std::size_t size)
+{
+	uint8_t* byteArray = new uint8_t[size];
+	for (size_t i = 0; i < size * 2; i += 2) // hex string to byte array
+	{
+		std::string byteString = hexStr.substr(i, 2);
+		byteArray[i / 2] = static_cast<uint8_t>(std::stoi(byteString, nullptr, 16));
+	}
+	return byteArray;
 }
 
 // CRC polynomial 0xedb88320
@@ -94,20 +105,29 @@ uint32_t WiFiFrame::calculateCRC32( const uint8_t* data, std::size_t size )
 
 bool WiFiFrame::checkCRC32(const std::string hexStr, std::size_t size)
 {
-	uint8_t* byteArray = new uint8_t[size];
-
-	for (size_t i = 0; i < size * 2; i += 2) // hex string to byte array
-	{
-		std::string byteString = hexStr.substr(i, 2);
-		byteArray[i / 2] = static_cast<uint8_t>(std::stoi(byteString, nullptr, 16));
-	}
-
+	uint8_t* byteArray = dataToByteArray(hexStr, size);
 	const uint32_t actualChecksum = *reinterpret_cast<const uint32_t*>(byteArray + size - 4);
-
 	uint32_t calcChecksum = calculateCRC32(byteArray, size - 4);
-
 	delete[] byteArray;
-
-	// Return true if the checksum is zero (i.e. the data passed the checksum), or false otherwise
+	
 	return actualChecksum == calcChecksum;
 }
+
+short int WiFiFrame::getType()
+{
+	// (stoi(bits.substr(0, 2), nullptr, 16)) - the first FC byte
+	short int type = ((stoi(bits.substr(0, 2), nullptr, 16)) & 0b00001100) >> 2;
+	return type;
+}
+
+bool WiFiFrame::isBeacon()
+{
+	// (stoi(bits.substr(0, 2), nullptr, 16)) - the first FC byte
+	short int subtype = ((stoi(bits.substr(0, 2), nullptr, 16)) & 0b11110000) >> 4;
+	if (subtype == 8)
+		return true;
+		
+	return false;
+}
+
+
