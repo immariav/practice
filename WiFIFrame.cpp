@@ -124,10 +124,27 @@ bool WiFiFrame::isBeacon()
 {
 	// (stoi(bits.substr(0, 2), nullptr, 16)) - the first FC byte
 	short int subtype = ((stoi(bits.substr(0, 2), nullptr, 16)) & 0b11110000) >> 4;
-	if (subtype == 8)
+	if (subtype == 0b1000)
 		return true;
-		
 	return false;
+}
+
+std::string WiFiFrame::getSSID()
+{
+	const int offset = 36 * 2;
+	uint8_t size = (stoi(bits.substr(offset + 2, 2), nullptr, 16));
+	std::string ssidHex = bits.substr(offset + 4, size * 2);
+	std::string asciiString;
+	//hex to ASCII
+	for (size_t i = 0; i < ssidHex.length(); i += 2) {
+		// Extract two characters from the hex string
+		std::string hexPair = ssidHex.substr(i, 2);
+		// Convert the hex pair to an integer value
+		unsigned int asciiValue = std::stoul(hexPair, nullptr, 16);
+		// Append the ASCII character to the result string
+		asciiString += static_cast<char>(asciiValue);
+	}
+	return asciiString;
 }
 
 

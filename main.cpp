@@ -12,7 +12,7 @@ int main()
 
     std::vector<WiFiFrame> frames_sorted;
 
-    for (int i = 0; i < frames.size(); i++)
+    for (size_t i = 0; i < frames.size(); i++)
     {
         if (WiFiFrame::checkCRC32(frames[i].bits, frames[i].size))
             frames_sorted.push_back(frames[i]);
@@ -25,19 +25,17 @@ int main()
         std::cout << std::dec << "passed " << frames_sorted.size();
 
     std::cout << std::endl;
-    int count = 0;
-    for (int i = 0; i < frames_sorted.size(); i++)
+
+    for (size_t i = 0; i < frames_sorted.size(); i++)
     {
-        if (frames_sorted[i].WiFiFrame::getType() == 0)
+        if (frames_sorted[i].getType() == 0)
         {
-            if (frames_sorted[i].WiFiFrame::isBeacon())
+            if (frames_sorted[i].isBeacon())
             {
-                count++;
+                std::cout << std::dec << frames_sorted[i].getSSID() << std::endl;
             }
         }
     }
-
-    std::cout << count;
 }
 
 std::vector<WiFiFrame> parsing(std::string fileName)

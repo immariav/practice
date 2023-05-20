@@ -52,6 +52,8 @@ public:
 
 	bool isBeacon();
 
+	std::string getSSID();
+
 private:
 
 };
