@@ -3,6 +3,7 @@
 #include <sstream>
 #include <vector>
 #include "WiFiFrame.h"
+#include <map>
 
 std::vector<WiFiFrame> parsing(std::string fileName);
 
@@ -11,6 +12,8 @@ int main()
     std::vector<WiFiFrame> frames = parsing("frames_phy.log");
 
     std::vector<WiFiFrame> frames_sorted;
+
+    std::vector<WiFiFrame> data_frames; // a vector to hold data frames for the last task
 
     for (size_t i = 0; i < frames.size(); i++)
     {
@@ -21,10 +24,7 @@ int main()
     frames.clear(); 
     frames.shrink_to_fit(); 
 
-    if(frames_sorted.size())
-        std::cout << std::dec << "passed " << frames_sorted.size();
-
-    std::cout << std::endl;
+    std::map<std::string, std::string> dronesSSID_MAC; // a map to hold drones' SSIDs with their MACs
 
     for (size_t i = 0; i < frames_sorted.size(); i++)
     {
@@ -32,10 +32,38 @@ int main()
         {
             if (frames_sorted[i].isBeacon())
             {
-                std::cout << std::dec << frames_sorted[i].getSSID() << std::endl;
+                std::string SSID = frames_sorted[i].getBeaconSSID();
+                if(WiFiFrame::compareSSID(SSID))
+                {
+                    dronesSSID_MAC.insert(std::make_pair(SSID, frames_sorted[i].getSA()));
+                }
             }
         }
+        if (frames_sorted[i].getType() == 2)
+            data_frames.push_back(frames_sorted[i]);
     }
+
+    frames_sorted.clear();
+    frames_sorted.shrink_to_fit();
+
+    std::vector<WiFiFrame> drone_frames;
+
+    for (size_t i = 0; i < data_frames.size(); i++)
+    {
+       for (const auto& pair : dronesSSID_MAC) 
+       {
+            if (pair.second == data_frames[i].getSA())
+                {
+                    drone_frames.push_back(data_frames[i]);
+                    break;
+                }
+            }
+    }
+
+    data_frames.clear();
+    data_frames.shrink_to_fit();
+
+    std::cout << drone_frames.size() << std::endl;
 }
 
 std::vector<WiFiFrame> parsing(std::string fileName)

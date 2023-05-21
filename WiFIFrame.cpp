@@ -18,7 +18,7 @@ WiFiFrame::WiFiFrame()
 	bits = "";
 }
 
-WiFiFrame::WiFiFrame(uint32_t Id, double Offset, short int BandWidth, MCS Mcs, size_t Size, std::string Bits)
+WiFiFrame::WiFiFrame(uint32_t Id, double Offset, uint8_t BandWidth, MCS Mcs, size_t Size, std::string Bits)
 {
 	id = Id;
 	offset = Offset;
@@ -44,6 +44,17 @@ uint8_t* WiFiFrame::dataToByteArray(const std::string hexStr, std::size_t size)
 		byteArray[i / 2] = static_cast<uint8_t>(std::stoi(byteString, nullptr, 16));
 	}
 	return byteArray;
+}
+
+std::string WiFiFrame::hexToBinary(const std::string& hex)
+{
+	std::stringstream ss;
+	for (size_t i = 0; i < hex.length(); ++i) 
+	{
+		uint8_t byte = std::stoi(hex.substr(i, 2), nullptr, 16);
+		ss << std::bitset<8>(byte);
+	}
+	return ss.str();
 }
 
 // CRC polynomial 0xedb88320
@@ -129,22 +140,35 @@ bool WiFiFrame::isBeacon()
 	return false;
 }
 
-std::string WiFiFrame::getSSID()
+std::string WiFiFrame::getBeaconSSID()
 {
-	const int offset = 36 * 2;
-	uint8_t size = (stoi(bits.substr(offset + 2, 2), nullptr, 16));
-	std::string ssidHex = bits.substr(offset + 4, size * 2);
-	std::string asciiString;
+	const int offset = 37 * 2; // 36 bytes before SSID information + 1 id byte before size
+	uint8_t size = (stoi(bits.substr(offset, 2), nullptr, 16));
+	std::string ssidHex = bits.substr(offset + 2, size * 2); // skipping 1 more byte right to SSID
+	std::string asciiString = "";
 	//hex to ASCII
-	for (size_t i = 0; i < ssidHex.length(); i += 2) {
-		// Extract two characters from the hex string
-		std::string hexPair = ssidHex.substr(i, 2);
-		// Convert the hex pair to an integer value
-		unsigned int asciiValue = std::stoul(hexPair, nullptr, 16);
-		// Append the ASCII character to the result string
+	for (size_t i = 0; i < size * 2; i += 2) {
+		unsigned int asciiValue = std::stoul(ssidHex.substr(i, 2), nullptr, 16);
 		asciiString += static_cast<char>(asciiValue);
 	}
 	return asciiString;
 }
+
+bool WiFiFrame::compareSSID(std::string SSID)
+{
+	const std::string pattern = "Drone4";
+	if(SSID.length() < pattern.length())
+		return false;
+
+	return SSID.substr(0, pattern.length()) == pattern;
+}
+
+std::string WiFiFrame::getSA()
+{
+	const int offset = 10 * 2;
+	std::string sourceAddress = bits.substr(offset, 6 * 2);
+	return sourceAddress;
+}
+
 
 
