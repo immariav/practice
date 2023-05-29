@@ -1,38 +1,158 @@
 #include "WiFiFrame.h"
-#include <string>
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-#include <vector>
 
 WiFiFrame::WiFiFrame()
 {
 	id = 0;
 	offset = 0.0;
 	bandWidth = 0;
-	mcs.value = 0;
-	mcs.standart = "";
-	mcs.scheme = "";
-	mcs.speed_mbps = 0;
+	mcs = 0;
+	modulation = "";
 	size = 0;
 	bits = "";
 }
 
-WiFiFrame::WiFiFrame(uint32_t Id, double Offset, uint8_t BandWidth, MCS Mcs, size_t Size, std::string Bits)
+WiFiFrame::WiFiFrame(uint32_t Id, float Offset, uint16_t BandWidth, uint16_t Mcs, std::string Modulation, uint32_t Size, std::string Bits)
 {
 	id = Id;
 	offset = Offset;
 	bandWidth = BandWidth;
-	mcs.value = Mcs.value;
-	mcs.standart = Mcs.standart;
-	mcs.scheme = Mcs.scheme;
-	mcs.speed_mbps = Mcs.speed_mbps;
+	mcs = Mcs;
+	modulation = Modulation;
 	size = Size;
 	bits = Bits;
 }
 
 WiFiFrame::~WiFiFrame()
 {
+}
+
+std::pair<std::vector<WiFiFrame>, uint32_t> WiFiFrame::parse(const std::string fileName)
+{
+	std::vector<WiFiFrame> frames;
+	uint32_t error = 0;
+
+	std::ifstream input_file(fileName);
+	if (!input_file.is_open())
+		error = -1;
+
+	std::string line;
+	
+	uint32_t lineCount = 0;
+	// parsing
+	while (error == 0 && getline(input_file, line))
+	{
+		lineCount++;
+		std::istringstream ss(line);
+		WiFiFrame frame;
+
+		std::string id_str;
+		getline(ss, id_str, '\t');
+		if (isNumeric(id_str))
+			frame.id = static_cast<uint32_t>(stoi(id_str));
+			
+		else {
+			error = lineCount;
+			break;
+		}
+
+		std::string offset_str;
+		getline(ss, offset_str, ',');
+		if (offset_str.substr(0, 7) == "Offset=")
+		{
+			offset_str = offset_str.substr(7); // skip "Offset=" prefix
+			if(isNumeric(offset_str))
+				frame.offset = stof(offset_str); 
+			else {
+				error = lineCount;
+				break;
+			}
+		}
+		else {
+			error = lineCount;
+			break;
+		}
+
+		std::string bw_str;
+		getline(ss, bw_str, 'M');
+		if (bw_str.substr(0, 3) == "BW=")
+		{
+			bw_str = bw_str.substr(3); // skip "BW=" prefix
+			if(isNumeric(bw_str))
+				frame.bandWidth = static_cast<uint8_t>(stoi(bw_str)); 
+			else {
+				error = lineCount;
+				break;
+			}
+		}	
+		else {
+			error = lineCount;
+			break;
+		}
+		
+		ss.ignore(3); // hz,
+
+		std::string mcs_str;
+		getline(ss, mcs_str, '(');
+		if (mcs_str.substr(0, 4) == "MCS=")
+		{
+			mcs_str = mcs_str.substr(4);
+			if (isNumeric(mcs_str))
+				frame.mcs = static_cast<uint8_t>(stoi(mcs_str));
+			else {
+				error = lineCount;
+				break;
+			}
+		}
+		else {
+			error = lineCount;
+			break;
+		}
+		
+		std::string mod_str;
+		getline(ss, mod_str, ')');
+		if (mod_str.substr(0, 6) == "802.11")
+			frame.modulation = mod_str; 
+		else {
+			error = lineCount;
+			break;
+		}
+
+		ss.ignore(1); // , after )
+
+		std::string size_str;
+		getline(ss, size_str, ',');
+		if (size_str.substr(0, 5) == "Size=")
+		{
+			size_str = size_str.substr(5); // skip "Size=" prefix
+			if (isNumeric(size_str))
+				frame.size = static_cast<uint32_t>(stoi(size_str));
+			else {
+				error = lineCount;
+				break;
+			}
+		}
+		else {
+			error = lineCount;
+			break;
+		}
+		std::string bits_str;
+		getline(ss, bits_str, '\n');
+		if (bits_str.substr(0, 5) == "Bits=")
+			frame.bits = bits_str.substr(5); // skip "Bits=" prefix
+		else {
+			error = lineCount;
+			break;
+		}
+
+		frames.push_back(frame); // add a WiFiFrame object to the vector
+	}
+	input_file.close();
+	if (error)
+	{
+		frames.clear();
+		frames.shrink_to_fit();
+	}
+	return { frames, error };
 }
 
 uint8_t* WiFiFrame::dataToByteArray(const std::string hexStr, std::size_t size)
@@ -154,7 +274,7 @@ std::string WiFiFrame::getBeaconSSID()
 	return asciiString;
 }
 
-bool WiFiFrame::compareSSID(std::string SSID)
+bool WiFiFrame::compareSSID(std::string SSID) // checks if SSID matches the given pattern
 {
 	const std::string pattern = "Drone4";
 	if(SSID.length() < pattern.length())
@@ -170,5 +290,82 @@ std::string WiFiFrame::getSA()
 	return sourceAddress;
 }
 
+std::pair<std::vector<WiFiFrame>, std::map<std::string, std::string>> WiFiFrame::processing(std::vector <WiFiFrame> data)
+{
+	std::vector<WiFiFrame> drone_frames; // return vector
+	std::map<std::string, std::string> dronesSSID_MAC; // a map to hold drones' SSIDs with their MACs
 
+	
+		std::vector<WiFiFrame> frames_sorted;
+
+		std::vector<WiFiFrame> data_frames; // a vector to hold data frames for the last task
+
+		for (size_t i = 0; i < data.size(); i++)
+		{
+			if (WiFiFrame::checkCRC32(data[i].bits, data[i].size))
+				frames_sorted.push_back(data[i]);
+		}
+
+		data.clear();
+		data.shrink_to_fit();
+
+		for (size_t i = 0; i < frames_sorted.size(); i++)
+		{
+			if (frames_sorted[i].getType() == 0)
+			{
+				if (frames_sorted[i].isBeacon())
+				{
+					std::string SSID = frames_sorted[i].getBeaconSSID();
+					if (WiFiFrame::compareSSID(SSID))
+					{
+						dronesSSID_MAC.insert(std::make_pair(SSID, frames_sorted[i].getSA()));
+					}
+				}
+			}
+			if (frames_sorted[i].getType() == 2)
+				data_frames.push_back(frames_sorted[i]);
+		}
+
+		frames_sorted.clear();
+		frames_sorted.shrink_to_fit();
+
+		for (size_t i = 0; i < data_frames.size(); i++)
+		{
+			for (const auto& pair : dronesSSID_MAC)
+			{
+				if (pair.second == data_frames[i].getSA())
+				{
+					drone_frames.push_back(data_frames[i]);
+					break;
+				}
+			}
+		}
+
+		data_frames.clear();
+		data_frames.shrink_to_fit();
+
+	return std::make_pair(drone_frames, dronesSSID_MAC);
+}
+
+void WiFiFrame::writeToFile(std::vector <WiFiFrame>& drone_frames, const std::string fileName)
+{
+	std::ofstream outputFile(fileName);
+
+	if (outputFile.is_open()) {
+		for (size_t i = 0; i < drone_frames.size(); i++)
+		{
+			outputFile << std::setfill('0') << std::setw(10) << drone_frames[i].id << "\t"
+				<< "Offset=" << drone_frames[i].offset << ","
+				<< "BW=" << drone_frames[i].bandWidth << "MHz,"
+				<< "MCS=" << drone_frames[i].mcs << "(" 
+				<< drone_frames[i].modulation << ")," 
+				<< "Size=" << drone_frames[i].size << ","
+				<< "Bits=" << drone_frames[i].bits << std::endl;
+		}
+	}
+	else {
+		std::cout << "Error: Failed to open the output file." << std::endl;
+	}
+	outputFile.close();
+}
 
