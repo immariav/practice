@@ -1,0 +1,10 @@
+﻿  uic MainWindow.ui
+  rcc MainWindow.qrc
+  moc MainWindow.h
+   RCC: Warning: No resources in 'D:\C++ projects\practice\QtWidgetsApplication\MainWindow.qrc'.
+  WiFIFrame.cpp
+  MainWindow.cpp
+  main.cpp
+  qrc_MainWindow.cpp
+  moc_MainWindow.cpp
+  QtWidgetsApplication.vcxproj -> D:\C++ projects\practice\FrameProcessing\x64\Debug\QtWidgetsApplication.exe
