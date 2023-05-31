@@ -22,6 +22,13 @@ public:
 	uint32_t size;
 	std::string bits;
 
+	struct processingResult
+	{
+		std::vector <WiFiFrame> droneFrames;
+		std::string SSID;
+		std::string MAC;
+	};
+
 	WiFiFrame();
 
 	WiFiFrame(uint32_t id, float offset, uint16_t bandWidth, uint16_t mcs, std::string modulation, uint32_t size, std::string bits);
@@ -32,7 +39,7 @@ public:
 
 	static bool checkCRC32(const std::string hexStr, std::size_t size);
 
-	static std::pair<std::vector<WiFiFrame>, std::map<std::string, std::string>> processing(std::vector<WiFiFrame> data);
+	static processingResult processing(std::vector<WiFiFrame> data);
 
 	static void writeToFile(std::vector <WiFiFrame>& drone_frames, const std::string fileName);
 

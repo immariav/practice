@@ -290,61 +290,56 @@ std::string WiFiFrame::getSA()
 	return sourceAddress;
 }
 
-std::pair<std::vector<WiFiFrame>, std::map<std::string, std::string>> WiFiFrame::processing(std::vector <WiFiFrame> data)
+WiFiFrame::processingResult WiFiFrame::processing(std::vector <WiFiFrame> data)
 {
 	std::vector<WiFiFrame> drone_frames; // return vector
-	std::map<std::string, std::string> dronesSSID_MAC; // a map to hold drones' SSIDs with their MACs
+	WiFiFrame::processingResult result;
+	std::vector<WiFiFrame> frames_sorted;
+	std::vector<WiFiFrame> data_frames; // a vector to hold data frames for the last task
 
-	
-		std::vector<WiFiFrame> frames_sorted;
+	for (size_t i = 0; i < data.size(); i++)
+	{
+		if (WiFiFrame::checkCRC32(data[i].bits, data[i].size))
+			frames_sorted.push_back(data[i]);
+	}
 
-		std::vector<WiFiFrame> data_frames; // a vector to hold data frames for the last task
+	data.clear();
+	data.shrink_to_fit();
 
-		for (size_t i = 0; i < data.size(); i++)
+	for (size_t i = 0; i < frames_sorted.size(); i++)
+	{
+		if (frames_sorted[i].getType() == 0)
 		{
-			if (WiFiFrame::checkCRC32(data[i].bits, data[i].size))
-				frames_sorted.push_back(data[i]);
-		}
-
-		data.clear();
-		data.shrink_to_fit();
-
-		for (size_t i = 0; i < frames_sorted.size(); i++)
-		{
-			if (frames_sorted[i].getType() == 0)
+			if (frames_sorted[i].isBeacon())
 			{
-				if (frames_sorted[i].isBeacon())
+				std::string SSID = frames_sorted[i].getBeaconSSID();
+				if (WiFiFrame::compareSSID(SSID))
 				{
-					std::string SSID = frames_sorted[i].getBeaconSSID();
-					if (WiFiFrame::compareSSID(SSID))
-					{
-						dronesSSID_MAC.insert(std::make_pair(SSID, frames_sorted[i].getSA()));
-					}
-				}
-			}
-			if (frames_sorted[i].getType() == 2)
-				data_frames.push_back(frames_sorted[i]);
-		}
-
-		frames_sorted.clear();
-		frames_sorted.shrink_to_fit();
-
-		for (size_t i = 0; i < data_frames.size(); i++)
-		{
-			for (const auto& pair : dronesSSID_MAC)
-			{
-				if (pair.second == data_frames[i].getSA())
-				{
-					drone_frames.push_back(data_frames[i]);
-					break;
+						result.MAC = frames_sorted[i].getSA();
+						result.SSID = SSID;
 				}
 			}
 		}
+		if (frames_sorted[i].getType() == 2)
+			data_frames.push_back(frames_sorted[i]);
+	}
 
-		data_frames.clear();
-		data_frames.shrink_to_fit();
+	frames_sorted.clear();
+	frames_sorted.shrink_to_fit();
 
-	return std::make_pair(drone_frames, dronesSSID_MAC);
+	for (size_t i = 0; i < data_frames.size(); i++)
+	{
+		if (result.MAC == data_frames[i].getSA())
+		{
+			drone_frames.push_back(data_frames[i]);
+		}
+	}
+
+	data_frames.clear();
+	data_frames.shrink_to_fit();
+
+	result.droneFrames = drone_frames; 
+	return result;
 }
 
 void WiFiFrame::writeToFile(std::vector <WiFiFrame>& drone_frames, const std::string fileName)

@@ -6,7 +6,7 @@ int main()
 	if (getData.second == 0)
 	{
 		auto result = WiFiFrame::processing(getData.first);
-		WiFiFrame::writeToFile(result.first, "output.log");
+		WiFiFrame::writeToFile(result.droneFrames, "output.log");
 	}
 	else if (getData.second == -1)
 		std::cout << "Error: Failed to open input file." << std::endl;

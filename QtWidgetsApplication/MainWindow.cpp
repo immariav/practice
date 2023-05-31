@@ -78,8 +78,16 @@ void MainWindow::startButtonClicked()
 				data_frames.push_back(frames_sorted[i]);
 		}
 
+		std::string showMAC;
+		for (size_t i = 0; i < droneMAC.size(); i += 2) {
+			showMAC += droneMAC.substr(i, 2);
+			if (i < droneMAC.size() - 2) {
+				showMAC += ":";
+			}
+		}
+
 		ui.label_SSID->setText(QString::fromStdString(droneSSID));
-		ui.label_MAC->setText(QString::fromStdString(droneMAC));
+		ui.label_MAC->setText(QString::fromStdString(showMAC));
 
 		frames_sorted.clear();
 		frames_sorted.shrink_to_fit();

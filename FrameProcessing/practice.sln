@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FrameProcessing", "practice
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QtWidgetsApplication", "..\QtWidgetsApplication\QtWidgetsApplication.vcxproj", "{70573DEA-9752-4A86-996D-C7DA950986CA}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "..\Test\Test.vcxproj", "{44B67796-70B7-43CA-BB69-39A0C1A5E152}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,14 @@ Global
 		{70573DEA-9752-4A86-996D-C7DA950986CA}.Release|x64.Build.0 = Release|x64
 		{70573DEA-9752-4A86-996D-C7DA950986CA}.Release|x86.ActiveCfg = Release|x64
 		{70573DEA-9752-4A86-996D-C7DA950986CA}.Release|x86.Build.0 = Release|x64
+		{44B67796-70B7-43CA-BB69-39A0C1A5E152}.Debug|x64.ActiveCfg = Debug|x64
+		{44B67796-70B7-43CA-BB69-39A0C1A5E152}.Debug|x64.Build.0 = Debug|x64
+		{44B67796-70B7-43CA-BB69-39A0C1A5E152}.Debug|x86.ActiveCfg = Debug|Win32
+		{44B67796-70B7-43CA-BB69-39A0C1A5E152}.Debug|x86.Build.0 = Debug|Win32
+		{44B67796-70B7-43CA-BB69-39A0C1A5E152}.Release|x64.ActiveCfg = Release|x64
+		{44B67796-70B7-43CA-BB69-39A0C1A5E152}.Release|x64.Build.0 = Release|x64
+		{44B67796-70B7-43CA-BB69-39A0C1A5E152}.Release|x86.ActiveCfg = Release|Win32
+		{44B67796-70B7-43CA-BB69-39A0C1A5E152}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
