@@ -11,6 +11,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::setLogButtonClicked()
 {
+	inputData.first.clear();
+	inputData.first.shrink_to_fit();
+	inputData.second = 0;
     QString fileName = QFileDialog::getOpenFileName(this, "Select Input File", QString(), "All Files (*.*)");
     if (!fileName.isEmpty()) 
 	{
@@ -37,6 +40,8 @@ void MainWindow::setLogButtonClicked()
 
 void MainWindow::startButtonClicked()
 {
+	drone_frames.clear();
+	drone_frames.shrink_to_fit();
 	if (!inputData.first.empty())
 	{
 		ui.label_checkSum->setText("Processing data...");
