@@ -1,4 +1,3 @@
-﻿  WiFIFrame.cpp
-  Test.cpp
-  Создание кода...
+﻿  Test.cpp
+D:\C++ projects\practice\Test\Test.cpp(23): warning C4715: areFilesSameContent: значение возвращается не при всех путях выполнения
   Test.vcxproj -> D:\C++ projects\practice\FrameProcessing\x64\Debug\Test.exe

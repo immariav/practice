@@ -290,10 +290,10 @@ std::string WiFiFrame::getSA()
 	return sourceAddress;
 }
 
-WiFiFrame::processingResult WiFiFrame::processing(std::vector <WiFiFrame> data)
+WiFiFrame::ProcessingResult WiFiFrame::processing(std::vector <WiFiFrame> data)
 {
 	std::vector<WiFiFrame> drone_frames; // return vector
-	WiFiFrame::processingResult result;
+	WiFiFrame::ProcessingResult result;
 	std::vector<WiFiFrame> frames_sorted;
 	std::vector<WiFiFrame> data_frames; // a vector to hold data frames for the last task
 

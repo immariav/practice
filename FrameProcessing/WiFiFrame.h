@@ -22,7 +22,7 @@ public:
 	uint32_t size;
 	std::string bits;
 
-	struct processingResult
+	struct ProcessingResult
 	{
 		std::vector <WiFiFrame> droneFrames;
 		std::string SSID;
@@ -39,7 +39,7 @@ public:
 
 	static bool checkCRC32(const std::string hexStr, std::size_t size);
 
-	static processingResult processing(std::vector<WiFiFrame> data);
+	static ProcessingResult processing(std::vector<WiFiFrame> data);
 
 	static void writeToFile(std::vector <WiFiFrame>& drone_frames, const std::string fileName);
 
